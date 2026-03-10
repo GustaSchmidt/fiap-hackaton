@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    container_name: fiapx_web_app
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - ./uploads:/app/uploads
+      - ./processed:/app/processed
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    restart: always
+    networks:
+      - fiapx_network
+
+  # Exemplo de serviço adicional: Redis para gerenciar a fila de vídeos
+  # Muito comum em projetos de processamento pesado
+  redis:
+    image: "redis:alpine"
+    container_name: fiapx_redis
+    networks:
+      - fiapx_network
+
+networks:
+  fiapx_network:
+    driver: bridge
+
+volumes:
+  uploads:
+  processed:

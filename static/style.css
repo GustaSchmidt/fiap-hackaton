@@ -1,0 +1,58 @@
+:root {
+    --bg-dark: #0f172a;
+    --sidebar-dark: #1e293b;
+    --fiap-red: #ed145b;
+    --text-light: #f8fafc;
+    --accent: #38bdf8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body { background-color: var(--bg-dark); color: var(--text-light); }
+
+.container { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 260px; background: var(--sidebar-dark); padding: 2rem; display: flex; flex-direction: column; }
+.logo { font-size: 1.5rem; margin-bottom: 3rem; font-weight: bold; }
+.logo span { color: var(--fiap-red); }
+
+nav { flex: 1; }
+.nav-btn { 
+    display: block; width: 100%; padding: 12px; margin-bottom: 10px;
+    background: transparent; border: none; color: #94a3b8; text-align: left;
+    cursor: pointer; font-size: 1rem; border-radius: 8px; transition: 0.3s;
+}
+.nav-btn i { margin-right: 10px; }
+.nav-btn.active, .nav-btn:hover { background: var(--fiap-red); color: white; }
+
+/* Content Area */
+.content { flex: 1; padding: 3rem; }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s; }
+
+/* Upload Box */
+.upload-box {
+    border: 2px dashed #475569; border-radius: 20px; padding: 5rem;
+    text-align: center; margin-top: 2rem; background: #1e293b;
+}
+.btn-primary { 
+    background: var(--fiap-red); color: white; border: none; 
+    padding: 12px 30px; border-radius: 5px; cursor: pointer; margin-top: 1rem;
+}
+
+/* Tables */
+.data-table { width: 100%; border-collapse: collapse; margin-top: 2rem; background: #1e293b; border-radius: 10px; overflow: hidden; }
+.data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #334155; }
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+.badge.success { background: #10b981; color: white; }
+.badge.warning { background: #f59e0b; color: white; }
+
+/* Settings */
+.settings-form { max-width: 500px; margin-top: 2rem; }
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; margin-bottom: 8px; color: #94a3b8; }
+.form-group select { width: 100%; padding: 10px; border-radius: 5px; background: #0f172a; color: white; border: 1px solid #475569; }
+.checkbox-label { display: block; margin-bottom: 10px; cursor: pointer; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
