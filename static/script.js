@@ -1,17 +1,20 @@
+// Função para trocar abas
 function showTab(tabName) {
-    // Esconde todos os conteúdos
     const contents = document.querySelectorAll('.tab-content');
     contents.forEach(content => content.classList.remove('active'));
 
-    // Remove a classe active de todos os botões
     const buttons = document.querySelectorAll('.nav-btn');
     buttons.forEach(btn => btn.classList.remove('active'));
 
-    // Mostra o selecionado
     document.getElementById(tabName).classList.add('active');
     event.currentTarget.classList.add('active');
+
+    if (tabName === 'history') {
+        loadHistory();
+    }
 }
 
+// Lógica de Upload
 document.getElementById('fileElem').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -23,10 +26,10 @@ function uploadVideo(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Feedback visual simples
     const uploadBox = document.getElementById('drop-area');
-    const originalContent = uploadBox.innerHTML;
-    uploadBox.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p>Enviando ${file.name}...</p>`;
+    const originalHTML = uploadBox.innerHTML;
+    
+    uploadBox.innerHTML = `<i class="fas fa-spinner fa-spin fa-3x"></i><p>Enviando para o MinIO...</p>`;
 
     fetch('/upload', {
         method: 'POST',
@@ -36,16 +39,38 @@ function uploadVideo(file) {
     .then(data => {
         if (data.message) {
             alert(data.message);
-            // Aqui você poderia atualizar a aba de histórico automaticamente
         } else {
             alert("Erro: " + data.error);
         }
     })
-    .catch(error => {
-        console.error('Erro no upload:', error);
-        alert("Falha na conexão com o servidor.");
-    })
+    .catch(err => alert("Erro na conexão: " + err))
     .finally(() => {
-        uploadBox.innerHTML = originalContent;
+        uploadBox.innerHTML = originalHTML;
     });
+}
+
+// Carregar Histórico Dinamicamente
+function loadHistory() {
+    const tbody = document.querySelector('.data-table tbody');
+    tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+
+    fetch('/list-videos')
+        .then(res => res.json())
+        .then(videos => {
+            tbody.innerHTML = '';
+            if (videos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Nenhum vídeo encontrado.</td></tr>';
+                return;
+            }
+            videos.forEach(video => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${video.name}</td>
+                    <td><span class="badge success">Armazenado</span></td>
+                    <td>${video.last_modified}</td>
+                    <td><button class="btn-text">Processar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
 }
