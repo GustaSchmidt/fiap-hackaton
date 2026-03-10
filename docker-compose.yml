@@ -4,22 +4,27 @@ services:
     container_name: fiapx_web_app
     ports:
       - "5000:5000"
-    volumes:
-      - .:/app
-      - ./uploads:/app/uploads
-      - ./processed:/app/processed
     environment:
-      - FLASK_ENV=development
-      - PYTHONUNBUFFERED=1
-    restart: always
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=password123
+    depends_on:
+      - minio
     networks:
       - fiapx_network
 
-  # Exemplo de serviço adicional: Redis para gerenciar a fila de vídeos
-  # Muito comum em projetos de processamento pesado
-  redis:
-    image: "redis:alpine"
-    container_name: fiapx_redis
+  minio:
+    image: minio/minio
+    container_name: fiapx_minio
+    ports:
+      - "9000:9000"    # API
+      - "9001:9001"    # Console UI
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password123
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
     networks:
       - fiapx_network
 
@@ -28,5 +33,4 @@ networks:
     driver: bridge
 
 volumes:
-  uploads:
-  processed:
+  minio_data:
