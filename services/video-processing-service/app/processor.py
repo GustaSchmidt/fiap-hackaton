@@ -95,8 +95,10 @@ def process_video(video_id: int, filename: str) -> bool:
     resolution = settings.FFMPEG_OUTPUT_RESOLUTION
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        input_path = os.path.join(tmpdir, f"input_{filename}")
-        output_path = os.path.join(tmpdir, f"output_{filename}")
+        # Use only the basename to avoid subdirectory issues in temp paths
+        basename = os.path.basename(filename)
+        input_path = os.path.join(tmpdir, f"input_{basename}")
+        output_path = os.path.join(tmpdir, f"output_{basename}")
 
         s3_client = _get_s3_client()
 

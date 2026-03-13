@@ -4,6 +4,7 @@ FROM nginx:1.25-alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy custom config
+COPY rate-limit.conf /etc/nginx/conf.d/00-rate-limit.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy frontend files

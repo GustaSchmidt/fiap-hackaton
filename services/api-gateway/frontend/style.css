@@ -180,6 +180,22 @@ nav { flex: 1; }
     margin-bottom: 1rem;
 }
 
+.btn-download {
+    background: var(--accent);
+    color: var(--bg-dark);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-download:hover {
+    opacity: 0.85;
+}
+
 /* Tables */
 .data-table {
     width: 100%;

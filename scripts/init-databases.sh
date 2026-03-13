@@ -1,10 +1,9 @@
 #!/bin/bash
 set -e
 
-# Create multiple databases for different services
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_USER" <<-EOSQL
-    CREATE DATABASE fiapx_auth;
-    CREATE DATABASE fiapx_videos;
-    GRANT ALL PRIVILEGES ON DATABASE fiapx_auth TO fiapx;
-    GRANT ALL PRIVILEGES ON DATABASE fiapx_videos TO fiapx;
+    SELECT 'CREATE DATABASE fiapx_auth' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'fiapx_auth')\gexec
+    SELECT 'CREATE DATABASE fiapx_videos' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'fiapx_videos')\gexec
+    GRANT ALL PRIVILEGES ON DATABASE fiapx_auth TO $POSTGRES_USER;
+    GRANT ALL PRIVILEGES ON DATABASE fiapx_videos TO $POSTGRES_USER;
 EOSQL

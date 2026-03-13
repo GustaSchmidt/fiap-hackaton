@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, Histogram, generate_latest
 from sqlalchemy.orm import Session
-from starlette.responses import Response
+from starlette.responses import Response, StreamingResponse
 
 from app.auth_middleware import get_current_user_id
 from app.config import settings
@@ -67,6 +67,11 @@ async def upload_video(
     ext = file.filename.rsplit(".", 1)[-1] if "." in file.filename else "mp4"
     unique_filename = f"{user_id}/{uuid.uuid4()}.{ext}"
 
+    # Read file size before upload (upload may close the stream)
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+
     # Upload to MinIO
     success = upload_file(file.file, unique_filename, file.content_type)
     if not success:
@@ -74,11 +79,6 @@ async def upload_video(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error storing video",
         )
-
-    # Read file size
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    file.file.seek(0)
 
     # Save metadata to DB
     video = Video(
@@ -94,7 +94,7 @@ async def upload_video(
     db.refresh(video)
 
     # Publish event to RabbitMQ
-    publish_video_event(
+    published = publish_video_event(
         "video.uploaded",
         {
             "video_id": video.id,
@@ -103,6 +103,12 @@ async def upload_video(
             "original_filename": video.original_filename,
         },
     )
+
+    if not published:
+        logger.error(
+            f"Video {video.id} uploaded but failed to publish to queue. "
+            "Video will remain in 'uploaded' status."
+        )
 
     # Invalidate cache
     redis_client.delete(f"videos:user:{user_id}")
@@ -181,6 +187,66 @@ def update_video_status(
     redis_client.delete(f"videos:user:{video.user_id}")
 
     return video
+
+
+@app.get("/videos/{video_id}/download")
+def download_video(
+    video_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Stream the processed video file directly to the client."""
+    video = (
+        db.query(Video)
+        .filter(Video.id == video_id, Video.user_id == user_id)
+        .first()
+    )
+    if not video:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Video not found",
+        )
+
+    if video.status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Video is not yet processed",
+        )
+
+    from app.storage import s3_client
+
+    # Try processed version first, fall back to original
+    processed_key = f"processed/{video.filename}"
+    try:
+        s3_client.head_object(Bucket=settings.MINIO_BUCKET, Key=processed_key)
+        download_key = processed_key
+    except Exception:
+        download_key = video.filename
+
+    try:
+        s3_response = s3_client.get_object(
+            Bucket=settings.MINIO_BUCKET,
+            Key=download_key,
+        )
+
+        def stream_chunks():
+            for chunk in s3_response["Body"].iter_chunks(chunk_size=1024 * 1024):
+                yield chunk
+
+        safe_filename = video.original_filename.replace('"', '_')
+        return StreamingResponse(
+            stream_chunks(),
+            media_type=video.content_type or "video/mp4",
+            headers={
+                "Content-Disposition": f'attachment; filename="{safe_filename}"',
+            },
+        )
+    except Exception as e:
+        logger.error(f"Failed to download video {video_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to download video",
+        )
 
 
 @app.get("/health")

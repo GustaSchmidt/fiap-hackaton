@@ -215,7 +215,7 @@ function loadHistory() {
     .then(function(videos) {
         tbody.innerHTML = '';
         if (!videos || videos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">No videos found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">No videos found.</td></tr>';
             return;
         }
         videos.forEach(function(video) {
@@ -232,11 +232,17 @@ function loadHistory() {
             var size = video.file_size ? formatFileSize(video.file_size) : '-';
             var date = video.created_at ? new Date(video.created_at).toLocaleString('en-US') : '-';
 
+            var downloadBtn = '';
+            if (video.status === 'completed') {
+                downloadBtn = '<button class="btn-download" onclick="downloadVideo(' + video.id + ')" title="Download processed video">Download</button>';
+            }
+
             tr.innerHTML =
                 '<td>' + video.original_filename + '</td>' +
                 '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
                 '<td>' + date + '</td>' +
-                '<td>' + size + '</td>';
+                '<td>' + size + '</td>' +
+                '<td>' + downloadBtn + '</td>';
             tbody.appendChild(tr);
         });
     });
@@ -248,6 +254,38 @@ function formatFileSize(bytes) {
     var sizes = ['B', 'KB', 'MB', 'GB'];
     var i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Download processed video
+function downloadVideo(videoId) {
+    fetch(VIDEO_API + '/videos/' + videoId + '/download', {
+        headers: getAuthHeaders()
+    })
+    .then(function(res) {
+        if (!res.ok) {
+            return res.clone().json().then(function(data) { throw new Error(data.detail || 'Download failed'); });
+        }
+        var filename = 'video.mp4';
+        var disposition = res.headers.get('Content-Disposition');
+        if (disposition) {
+            var match = disposition.match(/filename="?([^"]+)"?/);
+            if (match) filename = match[1];
+        }
+        return res.blob().then(function(blob) { return { blob: blob, filename: filename }; });
+    })
+    .then(function(data) {
+        var url = window.URL.createObjectURL(data.blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = data.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    })
+    .catch(function(err) {
+        alert('Download error: ' + err.message);
+    });
 }
 
 // Auto-refresh history every 10 seconds when on history tab

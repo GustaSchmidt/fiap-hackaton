@@ -2,6 +2,10 @@
 
 A microservices-based video processing platform built with FastAPI, RabbitMQ, MinIO, PostgreSQL, Redis, and Kubernetes.
 
+## Demo
+
+![FIAP X Demo](docs/demo.gif)
+
 ## Architecture
 
 ```
