@@ -1,0 +1,293 @@
+{
+  "id": null,
+  "uid": "fiapx-audit-security",
+  "title": "FIAP X - Audit & Security",
+  "tags": ["fiapx", "security", "audit"],
+  "timezone": "browser",
+  "editable": true,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Login Attempts - Success vs Failure",
+      "description": "Total login requests over time (includes both successful and failed attempts)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/login\", method=\"POST\"}[5m])",
+          "legendFormat": "Login Requests/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 25,
+            "gradientMode": "opacity",
+            "showPoints": "auto",
+            "pointSize": 5
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Login Volume (Cumulative)",
+      "description": "Total login attempts - spikes may indicate brute force attempts",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "auth_requests_total{endpoint=\"/login\", method=\"POST\"}",
+          "legendFormat": "Total Logins",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "red", "value": 1000 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      }
+    },
+    {
+      "id": 3,
+      "title": "Registration Volume (Cumulative)",
+      "description": "Total registrations - sudden spikes may indicate automated account creation",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "targets": [
+        {
+          "expr": "auth_requests_total{endpoint=\"/register\", method=\"POST\"}",
+          "legendFormat": "Total Registrations",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      }
+    },
+    {
+      "id": 4,
+      "title": "Traffic by Auth Endpoint",
+      "description": "Request rate broken down by authentication endpoint",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/login\"}[5m])",
+          "legendFormat": "/login [{{method}}]",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/register\"}[5m])",
+          "legendFormat": "/register [{{method}}]",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/logout\"}[5m])",
+          "legendFormat": "/logout [{{method}}]",
+          "refId": "C"
+        },
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/me\"}[5m])",
+          "legendFormat": "/me [{{method}}]",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "stacking": { "mode": "normal" },
+            "showPoints": "auto"
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Traffic by Video Endpoint",
+      "description": "Request rate for video service endpoints",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "rate(video_uploads_total[5m])",
+          "legendFormat": "Video Uploads/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "auto"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Login Rate Anomaly Detection",
+      "description": "Compares current login rate vs moving average to detect anomalies (brute force, credential stuffing)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/login\", method=\"POST\"}[1m])",
+          "legendFormat": "Current Login Rate (1m)",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/login\", method=\"POST\"}[30m])",
+          "legendFormat": "Moving Average (30m)",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(auth_requests_total{endpoint=\"/login\", method=\"POST\"}[1m]) - rate(auth_requests_total{endpoint=\"/login\", method=\"POST\"}[30m])",
+          "legendFormat": "Deviation from Average",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Deviation from Average" },
+            "properties": [
+              { "id": "custom.drawStyle", "value": "bars" },
+              { "id": "custom.fillOpacity", "value": 40 },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "Auth Endpoint Distribution",
+      "description": "Proportion of requests across auth endpoints - identifies most targeted endpoints",
+      "type": "piechart",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "auth_requests_total",
+          "legendFormat": "{{endpoint}} [{{method}}]",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "pieType": "donut",
+        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
+        "tooltip": { "mode": "single" }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Service Process Uptime",
+      "description": "How long each service process has been running since last restart",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "time() - process_start_time_seconds{job=\"auth-service\"}",
+          "legendFormat": "Auth Service Uptime",
+          "refId": "A"
+        },
+        {
+          "expr": "time() - process_start_time_seconds{job=\"video-upload-service\"}",
+          "legendFormat": "Video Upload Uptime",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 300 },
+              { "color": "green", "value": 3600 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}
