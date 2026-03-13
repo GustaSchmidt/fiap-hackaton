@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIAP X - Video Processing Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="auth-screen">
+        <div class="auth-container">
+            <h2 class="logo">FIAP <span>X</span></h2>
+            <p class="auth-subtitle">Video Processing Platform</p>
+
+            <div id="login-form" class="auth-form">
+                <h3>Login</h3>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" placeholder="Your username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" placeholder="Your password">
+                </div>
+                <button class="btn-primary" onclick="doLogin()">Sign In</button>
+                <p class="auth-link">Don't have an account? <a href="#" onclick="showRegister()">Sign Up</a></p>
+                <div id="login-error" class="error-msg" style="display:none;"></div>
+            </div>
+
+            <div id="register-form" class="auth-form" style="display:none;">
+                <h3>Register</h3>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="reg-username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="Your email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="reg-password" placeholder="Choose a password">
+                </div>
+                <button class="btn-primary" onclick="doRegister()">Register</button>
+                <p class="auth-link">Already have an account? <a href="#" onclick="showLogin()">Sign In</a></p>
+                <div id="register-error" class="error-msg" style="display:none;"></div>
+                <div id="register-success" class="success-msg" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen" class="container" style="display:none;">
+        <aside class="sidebar">
+            <h2 class="logo">FIAP <span>X</span></h2>
+            <nav>
+                                <button class="nav-btn active" onclick="showTab('upload')"><i class="fas fa-cloud-upload-alt"></i> Upload</button>
+                                <button class="nav-btn" onclick="showTab('history')"><i class="fas fa-history"></i> History</button>
+                                <button class="nav-btn" onclick="showTab('settings')"><i class="fas fa-cog"></i> Settings</button>
+            </nav>
+            <div class="user-info">
+                <span id="username-display"></span>
+                <button class="logout-btn" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </aside>
+
+        <main class="content">
+            <section id="upload" class="tab-content active">
+                <h1>Upload Video</h1>
+                <div class="upload-box" id="drop-area">
+                    <i class="fas fa-film fa-3x"></i>
+                    <p>Drag your video here or click to select</p>
+                    <input type="file" id="fileElem" accept="video/*" style="display:none" multiple>
+                    <button class="btn-primary" onclick="document.getElementById('fileElem').click()">Select Files</button>
+                    <p class="upload-hint">Supports multiple files for simultaneous processing</p>
+                </div>
+                <div id="upload-progress" class="upload-progress" style="display:none;"></div>
+            </section>
+
+            <section id="history" class="tab-content">
+                <h1>Processing History</h1>
+                <button class="btn-secondary" onclick="loadHistory()"><i class="fas fa-refresh"></i> Refresh</button>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Size</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="settings" class="tab-content">
+                <h1>Settings</h1>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label>Output Resolution</label>
+                        <select>
+                            <option>1080p (Full HD)</option>
+                            <option>720p (HD)</option>
+                            <option>480p (SD)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Active Algorithms</label>
+                                                <label class="checkbox-label"><input type="checkbox" checked> Object Detection</label>
+                                                <label class="checkbox-label"><input type="checkbox"> License Plate Recognition</label>
+                                                <label class="checkbox-label"><input type="checkbox"> Motion Tracking</label>
+                    </div>
+                    <button class="btn-primary">Save Settings</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,30 +1,207 @@
 services:
-  web:
-    build: .
-    container_name: fiapx_web_app
-    ports:
-      - "5000:5000"
+  # --- Infrastructure ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: fiapx_postgres
     environment:
-      - MINIO_ENDPOINT=minio:9000
-      - MINIO_ACCESS_KEY=admin
-      - MINIO_SECRET_KEY=password123
-    depends_on:
-      - minio
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+    ports:
+      - "5432:5432"
     networks:
       - fiapx_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-fiapx}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fiapx_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - fiapx_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: fiapx_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - fiapx_network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   minio:
     image: minio/minio
     container_name: fiapx_minio
     ports:
-      - "9000:9000"    # API
-      - "9001:9001"    # Console UI
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=password123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    networks:
+      - fiapx_network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Application Services ---
+  auth-service:
+    build: ./services/auth-service
+    container_name: fiapx_auth_service
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/fiapx_auth
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - fiapx_network
+    restart: on-failure
+
+  video-upload-service:
+    build: ./services/video-upload-service
+    container_name: fiapx_video_upload
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/fiapx_videos
+      REDIS_URL: redis://redis:6379/1
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      AUTH_SERVICE_URL: http://auth-service:8001
+      SECRET_KEY: ${SECRET_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - fiapx_network
+    restart: on-failure
+
+  video-processing-service:
+    build: ./services/video-processing-service
+    container_name: fiapx_video_processing
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      VIDEO_UPLOAD_SERVICE_URL: http://video-upload-service:8002
+      REDIS_URL: redis://redis:6379/2
+      MAX_CONCURRENT_WORKERS: "3"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: videos
+      FFMPEG_OUTPUT_RESOLUTION: "720"
+      FFMPEG_TIMEOUT: "600"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - fiapx_network
+    restart: on-failure
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: fiapx_notification
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
+      AUTH_SERVICE_URL: http://auth-service:8001
+      REDIS_URL: redis://redis:6379/3
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - fiapx_network
+    restart: on-failure
+
+  # --- API Gateway ---
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: fiapx_gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service
+      - video-upload-service
+    networks:
+      - fiapx_network
+    restart: on-failure
+
+  # --- Email Testing ---
+  mailhog:
+    image: mailhog/mailhog
+    container_name: fiapx_mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - fiapx_network
+
+  # --- Monitoring ---
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: fiapx_prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - fiapx_network
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: fiapx_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/.grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
     networks:
       - fiapx_network
 
@@ -33,4 +210,9 @@ networks:
     driver: bridge
 
 volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
   minio_data:
+  prometheus_data:
+  grafana_data:
