@@ -1,0 +1,49 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "fiapx-overview",
+    "title": "FIAP X - Overview",
+    "tags": ["fiapx"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Auth Requests Total",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "auth_requests_total",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+      },
+      {
+        "id": 2,
+        "title": "Video Uploads Total",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "video_uploads_total",
+            "legendFormat": "uploads"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+      },
+      {
+        "id": 3,
+        "title": "Upload Duration (seconds)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(video_upload_duration_seconds_sum[5m]) / rate(video_upload_duration_seconds_count[5m])",
+            "legendFormat": "avg duration"
+          }
+        ],
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 }
+      }
+    ],
+    "schemaVersion": 38,
+    "version": 1
+  }
+}

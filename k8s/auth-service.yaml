@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: fiapx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: fiapx/auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8001
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: DATABASE_URL_AUTH
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: REDIS_URL_AUTH
+            - name: SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: SECRET_KEY
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: fiapx
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 8001
+      targetPort: 8001

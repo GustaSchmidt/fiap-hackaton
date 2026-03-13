@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-processing-service
+  namespace: fiapx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: video-processing-service
+  template:
+    metadata:
+      labels:
+        app: video-processing-service
+    spec:
+      containers:
+        - name: video-processing-service
+          image: fiapx/video-processing-service:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: RABBITMQ_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: RABBITMQ_URL
+            - name: VIDEO_UPLOAD_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: VIDEO_UPLOAD_SERVICE_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: REDIS_URL_PROCESSING
+            - name: MAX_CONCURRENT_WORKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: MAX_CONCURRENT_WORKERS
+            - name: PROCESSING_SIMULATE_TIME
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: PROCESSING_SIMULATE_TIME
