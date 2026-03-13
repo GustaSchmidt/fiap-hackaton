@@ -1,0 +1,282 @@
+{
+  "id": null,
+  "uid": "fiapx-infrastructure",
+  "title": "FIAP X - Infrastructure & Performance",
+  "tags": ["fiapx", "infrastructure"],
+  "timezone": "browser",
+  "editable": true,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Service Uptime",
+      "description": "Current up/down status of each monitored service",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up{job=\"auth-service\"}",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "up{job=\"video-upload-service\"}",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        },
+        {
+          "expr": "up{job=\"prometheus\"}",
+          "legendFormat": "Prometheus",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+          ],
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "auto"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Service Availability (SLA %)",
+      "description": "Percentage of time each service has been up in the selected time range",
+      "type": "gauge",
+      "gridPos": { "h": 5, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "avg_over_time(up{job=\"auth-service\"}[1h])",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(up{job=\"video-upload-service\"}[1h])",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 0.95 },
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green", "value": 0.999 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "showThresholdLabels": true,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 3,
+      "title": "Process CPU Usage per Service",
+      "description": "Rate of CPU seconds consumed by each service",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(process_cpu_seconds_total{job=\"video-upload-service\"}[5m])",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 25,
+            "gradientMode": "scheme",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Process Memory (RSS) per Service",
+      "description": "Resident memory used by each service process",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes{job=\"auth-service\"}",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "process_resident_memory_bytes{job=\"video-upload-service\"}",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "gradientMode": "scheme",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 536870912 },
+              { "color": "red", "value": 1073741824 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Process Virtual Memory per Service",
+      "description": "Virtual memory allocated by each service",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "targets": [
+        {
+          "expr": "process_virtual_memory_bytes{job=\"auth-service\"}",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "process_virtual_memory_bytes{job=\"video-upload-service\"}",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Open File Descriptors per Service",
+      "description": "Number of open file descriptors (indicates connection/resource usage)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "targets": [
+        {
+          "expr": "process_open_fds{job=\"auth-service\"}",
+          "legendFormat": "Auth Service",
+          "refId": "A"
+        },
+        {
+          "expr": "process_open_fds{job=\"video-upload-service\"}",
+          "legendFormat": "Video Upload Service",
+          "refId": "B"
+        },
+        {
+          "expr": "process_max_fds{job=\"auth-service\"}",
+          "legendFormat": "Auth Service Max",
+          "refId": "C"
+        },
+        {
+          "expr": "process_max_fds{job=\"video-upload-service\"}",
+          "legendFormat": "Upload Service Max",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Python GC Collections",
+      "description": "Garbage collection activity across Python services",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 21 },
+      "targets": [
+        {
+          "expr": "rate(python_gc_collections_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "Auth Service - Gen {{generation}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(python_gc_collections_total{job=\"video-upload-service\"}[5m])",
+          "legendFormat": "Upload Service - Gen {{generation}}",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        }
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}
