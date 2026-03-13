@@ -85,8 +85,8 @@ For Kubernetes deployment:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/ebanx/teste-gustavo.git
-   cd teste-gustavo
+   git clone https://github.com/GustaSchmidt/fiap-hackaton.git
+   cd fiap-hackaton
    ```
 
 2. Copy the environment file and adjust values if needed:
