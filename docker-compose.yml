@@ -124,10 +124,17 @@ services:
       VIDEO_UPLOAD_SERVICE_URL: http://video-upload-service:8002
       REDIS_URL: redis://redis:6379/2
       MAX_CONCURRENT_WORKERS: "3"
-      PROCESSING_SIMULATE_TIME: "10"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: videos
+      FFMPEG_OUTPUT_RESOLUTION: "720"
+      FFMPEG_TIMEOUT: "600"
     depends_on:
       rabbitmq:
         condition: service_healthy
+      minio:
+        condition: service_started
     networks:
       - fiapx_network
     restart: on-failure

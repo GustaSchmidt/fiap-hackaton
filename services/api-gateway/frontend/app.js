@@ -42,7 +42,7 @@ function showApp() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app-screen').style.display = 'flex';
     document.getElementById('username-display').textContent =
-        localStorage.getItem('fiapx_username') || 'Usuário';
+        localStorage.getItem('fiapx_username') || 'User';
 }
 
 function showLoginScreen() {
@@ -57,7 +57,7 @@ async function doLogin() {
     errorDiv.style.display = 'none';
 
     if (!username || !password) {
-        errorDiv.textContent = 'Preencha todos os campos';
+        errorDiv.textContent = 'Please fill in all fields';
         errorDiv.style.display = 'block';
         return;
     }
@@ -80,11 +80,11 @@ async function doLogin() {
             localStorage.setItem('fiapx_username', username);
             showApp();
         } else {
-            errorDiv.textContent = data.detail || 'Erro ao fazer login';
+            errorDiv.textContent = data.detail || 'Login failed';
             errorDiv.style.display = 'block';
         }
     } catch (err) {
-        errorDiv.textContent = 'Erro de conexão: ' + err.message;
+        errorDiv.textContent = 'Connection error: ' + err.message;
         errorDiv.style.display = 'block';
     }
 }
@@ -99,7 +99,7 @@ async function doRegister() {
     successDiv.style.display = 'none';
 
     if (!username || !email || !password) {
-        errorDiv.textContent = 'Preencha todos os campos';
+        errorDiv.textContent = 'Please fill in all fields';
         errorDiv.style.display = 'block';
         return;
     }
@@ -114,15 +114,15 @@ async function doRegister() {
         var data = await response.json();
 
         if (response.ok) {
-            successDiv.textContent = 'Registro realizado! Faça login.';
+            successDiv.textContent = 'Registration successful! Please sign in.';
             successDiv.style.display = 'block';
             setTimeout(showLogin, 2000);
         } else {
-            errorDiv.textContent = data.detail || 'Erro ao registrar';
+            errorDiv.textContent = data.detail || 'Registration failed';
             errorDiv.style.display = 'block';
         }
     } catch (err) {
-        errorDiv.textContent = 'Erro de conexão: ' + err.message;
+        errorDiv.textContent = 'Connection error: ' + err.message;
         errorDiv.style.display = 'block';
     }
 }
@@ -165,7 +165,7 @@ function uploadVideo(file) {
     var itemId = 'upload-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     var itemHTML = '<div class="upload-item" id="' + itemId + '">' +
         '<span>' + file.name + '</span>' +
-        '<span class="badge processing">Enviando...</span></div>';
+        '<span class="badge processing">Uploading...</span></div>';
     progressDiv.innerHTML += itemHTML;
 
     var formData = new FormData();
@@ -181,17 +181,17 @@ function uploadVideo(file) {
         var item = document.getElementById(itemId);
         if (result.ok) {
             item.querySelector('.badge').className = 'badge completed';
-            item.querySelector('.badge').textContent = 'Enviado!';
+            item.querySelector('.badge').textContent = 'Uploaded!';
         } else {
             item.querySelector('.badge').className = 'badge error';
-            item.querySelector('.badge').textContent = 'Erro';
+            item.querySelector('.badge').textContent = 'Error';
         }
     })
     .catch(function(err) {
         var item = document.getElementById(itemId);
         if (item) {
             item.querySelector('.badge').className = 'badge error';
-            item.querySelector('.badge').textContent = 'Erro';
+            item.querySelector('.badge').textContent = 'Error';
         }
     });
 }
@@ -199,7 +199,7 @@ function uploadVideo(file) {
 // History
 function loadHistory() {
     var tbody = document.getElementById('history-body');
-    tbody.innerHTML = '<tr><td colspan="4">Carregando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
     fetch(VIDEO_API + '/videos', {
         headers: getAuthHeaders()
@@ -215,22 +215,22 @@ function loadHistory() {
     .then(function(videos) {
         tbody.innerHTML = '';
         if (!videos || videos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">Nenhum vídeo encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4">No videos found.</td></tr>';
             return;
         }
         videos.forEach(function(video) {
             var tr = document.createElement('tr');
             var statusClass = video.status || 'uploaded';
             var statusText = {
-                'uploaded': 'Enviado',
-                'queued': 'Na Fila',
-                'processing': 'Processando',
-                'completed': 'Concluído',
-                'error': 'Erro'
+                'uploaded': 'Uploaded',
+                'queued': 'Queued',
+                'processing': 'Processing',
+                'completed': 'Completed',
+                'error': 'Error'
             }[statusClass] || statusClass;
 
             var size = video.file_size ? formatFileSize(video.file_size) : '-';
-            var date = video.created_at ? new Date(video.created_at).toLocaleString('pt-BR') : '-';
+            var date = video.created_at ? new Date(video.created_at).toLocaleString('en-US') : '-';
 
             tr.innerHTML =
                 '<td>' + video.original_filename + '</td>' +

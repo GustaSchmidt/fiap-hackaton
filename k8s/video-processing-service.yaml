@@ -38,8 +38,33 @@ spec:
                 configMapKeyRef:
                   name: fiapx-config
                   key: MAX_CONCURRENT_WORKERS
-            - name: PROCESSING_SIMULATE_TIME
+            - name: MINIO_ENDPOINT
               valueFrom:
                 configMapKeyRef:
                   name: fiapx-config
-                  key: PROCESSING_SIMULATE_TIME
+                  key: MINIO_ENDPOINT
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fiapx-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fiapx-secrets
+                  key: MINIO_SECRET_KEY
+            - name: MINIO_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: MINIO_BUCKET
+            - name: FFMPEG_OUTPUT_RESOLUTION
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: FFMPEG_OUTPUT_RESOLUTION
+            - name: FFMPEG_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: fiapx-config
+                  key: FFMPEG_TIMEOUT
