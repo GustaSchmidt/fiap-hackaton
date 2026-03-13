@@ -131,7 +131,7 @@
             "drawStyle": "bars",
             "lineWidth": 1,
             "fillOpacity": 60,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "never",
             "barAlignment": 0
           }
@@ -196,7 +196,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 25,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "auto"
           }
         }

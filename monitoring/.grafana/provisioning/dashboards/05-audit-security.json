@@ -32,7 +32,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 25,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "auto",
             "pointSize": 5
           },

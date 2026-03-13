@@ -32,7 +32,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 20,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "auto",
             "pointSize": 5
           }
@@ -201,7 +201,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 30,
-            "gradientMode": "scheme"
+            "gradientMode": "opacity"
           },
           "thresholds": {
             "steps": [
@@ -239,7 +239,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 20,
-            "gradientMode": "scheme"
+            "gradientMode": "opacity"
           },
           "thresholds": {
             "steps": [

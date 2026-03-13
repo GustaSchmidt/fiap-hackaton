@@ -121,7 +121,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 25,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "auto"
           },
           "thresholds": {
@@ -160,7 +160,7 @@
             "drawStyle": "line",
             "lineWidth": 2,
             "fillOpacity": 20,
-            "gradientMode": "scheme",
+            "gradientMode": "opacity",
             "showPoints": "auto"
           },
           "thresholds": {
